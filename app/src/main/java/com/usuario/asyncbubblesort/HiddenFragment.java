@@ -9,10 +9,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-
 public class HiddenFragment extends Fragment {
     private TaskCallBacks mCallBacks;
-    private BubbleNumberTask bubbleNumberTask;
+    public BubbleNumberTask bubbleNumberTask;
+
+    public BubbleNumberTask getBubbleNumberTask() {
+        return bubbleNumberTask;
+    }
 
     interface TaskCallBacks {
         void onPreExecute();        //Configurar la visibilidad de los botones.
@@ -83,15 +86,16 @@ public class HiddenFragment extends Fragment {
             mCallBacks.onProgressUpdate(values[0]);
         }
         @Override
-        protected void onPostExecute(Long aLong) {
+        protected void onPostExecute(Long time) {
             if (mCallBacks != null)
-                mCallBacks.onPostExecute(aLong);
+                mCallBacks.onPostExecute(time);
         }
         @Override
         protected void onCancelled() {
             super.onCancelled();
             mCallBacks.onCancelled();
         }
+
     }
 
 }

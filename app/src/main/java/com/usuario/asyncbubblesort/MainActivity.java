@@ -3,6 +3,8 @@ package com.usuario.asyncbubblesort;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -26,10 +28,12 @@ public class MainActivity extends Activity implements HiddenFragment.TaskCallBac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         txvProgress = (TextView) findViewById(R.id.txv_progress);
+        mProgressBar = (ProgressBar) findViewById(R.id.mainProgBar);
+
         btnInit = (Button) findViewById(R.id.btn_init);
         btnCancel = (Button) findViewById(R.id.btn_cancel);
-        mProgressBar = (ProgressBar) findViewById(R.id.mainProgBar);
 
         btnInit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -41,8 +45,27 @@ public class MainActivity extends Activity implements HiddenFragment.TaskCallBac
                 ft.commit();
             }
         });
+        btnCancel = (Button) findViewById(R.id.btn_cancel);
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (fragment != null)
+                    if(fragment.getBubbleNumberTask().cancel(true));
+            }
+        });
+
+        //Hay que obtener la referencia del fragment en el caso de que exista
+        fragment=(HiddenFragment) getFragmentManager().findFragmentByTag("FRAGMENT_HIDDEN");
         if (fragment == null)
             generateNumbers();
+
+        //Controlar que la Activity se reinicia. Hay que comprobar el estado del hilo
+        if (fragment != null)
+            if(fragment.getBubbleNumberTask().getStatus() == AsyncTask.Status.RUNNING) {
+                mProgressBar.setVisibility(View.VISIBLE);
+                btnCancel.setVisibility(View.VISIBLE);
+                btnInit.setEnabled(false);
+            }
     }
     /**
      * Método que inicializa el array mNumbers con números aleatorios.
@@ -70,6 +93,7 @@ public class MainActivity extends Activity implements HiddenFragment.TaskCallBac
         btnCancel.setVisibility(View.INVISIBLE);
         mProgressBar.setVisibility(View.INVISIBLE);
         btnInit.setEnabled(true);
+        fragment.bubbleNumberTask.cancel(true);
     }
     @Override
     public void onPostExecute(Long time) {
@@ -77,5 +101,16 @@ public class MainActivity extends Activity implements HiddenFragment.TaskCallBac
         btnCancel.setVisibility(View.INVISIBLE);
         btnInit.setEnabled(true);
         txvProgress.setText("Ha tardado: " + time + " segundos ");
+    }
+    //Guarda el estado cuando se gira
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+    }
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        mNumbers = savedInstanceState.getIntArray("numeros");
     }
 }
